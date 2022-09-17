@@ -290,7 +290,7 @@ export default {
             } else {
                 newElm = {
                     type: "v-container",
-                    content: "Empty",
+                    content: null,
                     children: [],
                     bind: {},
                     on: {},

@@ -17,18 +17,18 @@
                     </a>
                 </td>
             </tr>
-            <tr v-if="acceptChild">
-                <td style="width:15px">
-                    |
-                    <hr />
+            <tr v-if="acceptChild" style="color:green">
+                <td style="width:15px; white-space: noWrap">
+                    |-->
                 </td>
                 <td>
-                    <treeNode
+                    <i v-if="(localDragged instanceof Object)">{{localDragged.obj.type}}</i>
+                    <!-- <treeNode
                         v-if="(localDragged instanceof Object)"
                         :obj="localDragged.obj"
                         :id="`child_${id||''}`"
                         :adding="true"
-                    />
+                    />-->
                 </td>
             </tr>
         </table>
@@ -63,18 +63,18 @@
                 </td>
             </tr>
 
-            <tr v-if="acceptSibling == ck">
-                <td style="width:15px">
-                    |
-                    <hr />
+            <tr v-if="acceptSibling == ck" style="color:green">
+                <td style="width:15px; white-space: noWrap">
+                    |-->
                 </td>
                 <td>
-                    <treeNode
+                    <i v-if="(localDragged instanceof Object)">{{localDragged.obj.type}}</i>
+                    <!-- <treeNode
                         v-if="(localDragged instanceof Object)"
                         :obj="localDragged.obj"
                         :id="`siblig_${id||''}.${ck}`"
                         :adding="true"
-                    />
+                    />-->
                 </td>
             </tr>
         </table>
