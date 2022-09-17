@@ -1,7 +1,9 @@
 <template>
     <v-container fluid>
         <v-navigation-drawer right app permanent width="25vw">
-            <div style="height:calc(52vh - 135px); overflow:auto; border:1px solid black; padding:5px">
+            <div
+                style="height:calc(52vh - 135px); overflow:auto; border:1px solid black; padding:5px"
+            >
                 <treeNode
                     :obj="elements"
                     @select="setSelected"
@@ -12,8 +14,30 @@
             <div style="height:80px; border:1px solid black; padding:5px">
                 <v-row dense>
                     <v-col>
-                        <v-btn icon x-small @click="addChild()" :disabled="!selected">
-                            <v-icon>mdi-new-box</v-icon>
+                        <v-btn
+                            icon
+                            x-small
+                            @click="addChild(null,true)"
+                            @contextmenu.stop.prevent="addChild(null,false)"
+                            :disabled="!selected"
+                        >
+                            <v-icon>mdi-file-document-plus-outline</v-icon>
+                        </v-btn>
+                    </v-col>
+                    <v-col>
+                        <v-btn
+                            icon
+                            x-small
+                            @click="addSibling(null,true)"
+                            @contextmenu.stop.prevent="addSibling(null,false)"
+                            :disabled="!selected"
+                        >
+                            <v-icon>mdi-file-arrow-up-down-outline</v-icon>
+                        </v-btn>
+                    </v-col>
+                    <v-col>
+                        <v-btn icon x-small @click="groupToggle()" :disabled="!selected">
+                            <v-icon>mdi-table-merge-cells</v-icon>
                         </v-btn>
                     </v-col>
                     <v-col>
@@ -27,8 +51,25 @@
                         </v-btn>
                     </v-col>
                     <v-col>
-                        <v-btn icon x-small @click="paste()" :disabled="!copyBuffer || !selected">
-                            <v-icon>mdi-content-paste</v-icon>
+                        <v-btn
+                            icon
+                            x-small
+                            @click="pasteChild(true)"
+                            @contextmenu.stop.prevent="pasteChild(false)"
+                            :disabled="!copyBuffer || !selected"
+                        >
+                            <v-icon>mdi-clipboard-plus-outline</v-icon>
+                        </v-btn>
+                    </v-col>
+                    <v-col>
+                        <v-btn
+                            icon
+                            x-small
+                            @click="pasteSibling(true)"
+                            @contextmenu.stop.prevent="pasteSibling(false)"
+                            :disabled="!copyBuffer || !selected"
+                        >
+                            <v-icon>mdi-clipboard-flow-outline</v-icon>
                         </v-btn>
                     </v-col>
                     <v-col>
@@ -46,6 +87,7 @@
                             <v-icon>mdi-wrench-check-outline</v-icon>
                         </v-btn>
                     </v-col>
+                    
                     <v-col>
                         <v-btn icon x-small @click="remChild()" :disabled="!selected">
                             <v-icon>mdi-delete-outline</v-icon>
@@ -54,13 +96,13 @@
                 </v-row>
                 <v-row v-if="selected" dense>
                     <v-col cols="6">
-                        <v-autocomplete
+                        <v-combobox
                             label="element"
                             :items="tagList"
                             v-model="selected.type"
                             hide-details="auto"
                             dense
-                        ></v-autocomplete>
+                        ></v-combobox>
                     </v-col>
                     <v-col cols="6">
                         <v-text-field
@@ -145,7 +187,7 @@
                         </v-row>
                     </v-tab-item>
 
-                    <v-tab-item>
+                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
                         <ul v-if="docs">
                             <li v-for="slot in docs.slots" :key="slot.name">
                                 <b>{{slot.name}}</b>
@@ -179,7 +221,8 @@
                         </ul>
                     </v-tab-item>
 
-                    <v-tab-item></v-tab-item>
+                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;"></v-tab-item>
+                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;"></v-tab-item>
                 </v-tabs>
             </div>
         </v-navigation-drawer>
@@ -247,6 +290,11 @@ export default {
         },
     },
     methods: {
+        groupToggle() {
+            if (!this.selected) return;
+
+            this.$set(this.selected,'grouped',!this.selected.grouped) 
+        },
         copy() {
             this.copyBuffer = this.selected;
         },
@@ -254,13 +302,21 @@ export default {
             this.copyBuffer = this.selected;
             this.remChild();
         },
-        paste() {
+        pasteSibling(append) {
             if (!this.copyBuffer) {
                 alert("Nothing copied!");
                 return;
             }
 
-            this.addChild(this.copyBuffer);
+            this.addSibling(this.copyBuffer, append);
+        },
+        pasteChild(append) {
+            if (!this.copyBuffer) {
+                alert("Nothing copied!");
+                return;
+            }
+
+            this.addChild(this.copyBuffer, append);
         },
         copySettings() {
             this.settingsBuffer = this.selected;
@@ -276,7 +332,36 @@ export default {
 
             this.$set(this.selected, "bind", { ...this.settingsBuffer.bind });
         },
-        addChild(proto) {
+        addSibling(proto, append) {
+            if (!this.selected) return;
+            if (!this.parentOfSelected?.children) return;
+
+            let pos = this.parentOfSelected.children.indexOf(this.selected);
+
+            let newElm = null;
+            if (proto) {
+                newElm = JSON.parse(JSON.stringify(proto));
+            } else {
+                newElm = {
+                    type: "div",
+                    content: null,
+                    children: [],
+                    bind: {},
+                    on: {},
+                };
+            }
+
+            if (append) {
+                this.parentOfSelected.children.splice(pos + 1, 0, newElm);
+            } else {
+                this.parentOfSelected.children.splice(pos, 0, newElm);
+            }
+
+            if (!proto) {
+                this.selected = newElm;
+            }
+        },
+        addChild(proto, append) {
             if (!this.selected) return;
 
             if (!this.selected?.children) {
@@ -289,7 +374,7 @@ export default {
                 newElm = JSON.parse(JSON.stringify(proto));
             } else {
                 newElm = {
-                    type: "v-container",
+                    type: "div",
                     content: null,
                     children: [],
                     bind: {},
@@ -297,12 +382,19 @@ export default {
                 };
             }
 
-            this.selected.children.push(newElm);
+            if (append) {
+                this.selected.children.push(newElm);
+            } else {
+                this.selected.children.splice(0, 0, newElm);
+            }
+
             this.$set(this.selected, "content", undefined);
-            if (!proto) this.selected = newElm;
+            if (!proto) {
+                this.parentOfSelected = this.selected;
+                this.selected = newElm;
+            }
         },
         remChild() {
-            console.log("rem", this.selected, this.parentOfSelected);
             if (!this.selected) return;
             if (!this.parentOfSelected) return;
 
@@ -311,21 +403,44 @@ export default {
 
             console.log(parent, pos);
             if (pos >= 0) parent.children.splice(pos, 1);
+
+            if (parent.children.length > 0) {
+                if (pos == 0) {
+                    this.selected = parent.children[pos];
+                } else if (pos > 0 && pos < parent.children.length - 1)
+                    this.selected = parent.children[pos - 1];
+                else
+                    this.selected = parent.children[parent.children.length - 1];
+            } else {
+                let newParent = this._findParent(this.parentOfSelected);
+                if (newParent) {
+                    console.log(newParent);
+                    this.selected = this.parentOfSelected;
+                    this.parentOfSelected = newParent;
+                } else {
+                    this.selected = null;
+                    this.parentOfSelected = null;
+                }
+            }
+
+            console.log(this.selected, this.parentOfSelected);
         },
-        // getVal(prop) {
-        //     let val = this.selected?.bind?.[prop];
-        //     if (prop == "dense") console.log(prop, val);
-        //     return val;
-        // },
-        // setVal(prop, val) {
-        //     if (val == "false") val = false;
-        //     if (val == "true") val = true;
 
-        //     if (!this.selected?.bind) this.$set(this.selected, "bind", {});
-        //     this.$set(this.selected.bind, prop, val === null ? false : val);
+        _findParent(current, obj) {
+            if (!obj) obj = this.elements;
+            if (!(obj instanceof Object)) return;
 
-        //     if (val === null) delete this.selected.bind[prop];
-        // },
+            if (obj.children instanceof Array) {
+                if (obj.children.indexOf(current) >= 0) return obj;
+                for (let i = 0; i < obj.children.length; i++) {
+                    if (obj.children[i] instanceof Object) {
+                        let res = this._findParent(current, obj.children[i]);
+                        if (res) return res;
+                    }
+                }
+            }
+        },
+
         setSelected(obj) {
             //console.log("select", obj);
             this.parentOfSelected = obj.parent;

@@ -10,17 +10,23 @@
                         @dragend="dragend"
                         href="#"
                         @click.prevent="$emit('select', {selected: obj!==selected ? obj: null, parent})"
+                        @contextmenu.stop.prevent="$set(obj,'grouped',!obj.grouped)&&$emit('select', {selected: obj!==selected ? obj: null, parent})"
                         :style="style"
                     >
-                        <b v-if="obj===selected">{{obj.type || 'empty'}}</b>
-                        <i v-else>{{obj.type || 'empty'}}</i>
+                        <span v-if="obj.grouped">
+                            {&nbsp;
+                            <b v-if="obj===selected">{{obj.type || 'empty'}}</b>
+                            <i v-else>{{obj.type || 'empty'}}</i>&nbsp;}
+                        </span>
+                        <span v-else>
+                            <b v-if="obj===selected">{{obj.type || 'empty'}}</b>
+                            <i v-else>{{obj.type || 'empty'}}</i>
+                        </span>
                     </a>
                 </td>
             </tr>
             <tr v-if="acceptChild" style="color:green">
-                <td style="width:15px; white-space: noWrap">
-                    |-->
-                </td>
+                <td style="width:15px; white-space: noWrap">|--></td>
                 <td>
                     <i v-if="(localDragged instanceof Object)">{{localDragged.obj.type}}</i>
                     <!-- <treeNode
@@ -32,52 +38,52 @@
                 </td>
             </tr>
         </table>
-        <table
-            v-for="(child,ck) in obj.children"
-            :key="`${id||''}.${ck}`"
-            dropzone="true"
-            @dragover.prevent.stop="dragoverChild(ck)"
-            @drop.stop="drop(ck,$event)"
-            style="width:100%"
-        >
-            <tr>
-                <td style="width:15px; vertical-align: top;">
-                    |
-                    <hr />
-                </td>
-                <td>
-                    <treeNode
-                        v-if="(child instanceof Object)"
-                        :obj="child"
-                        :id="`${id||''}.${ck}`"
-                        :dragged="localDragged"
-                        @dragged="childDragged"
-                        :accepting="acceptSibling==ck"
-                        @select="$emit('select',$event)"
-                        :selected="selected"
-                        :deleteMe="deleteMeFn(ck)"
-                        :parent="obj"
-                        :dragging="isDragging"
-                        :adding="adding"
-                    />
-                </td>
-            </tr>
+        <template v-if="!obj.grouped">
+            <table
+                v-for="(child,ck) in obj.children"
+                :key="`${id||''}.${ck}`"
+                dropzone="true"
+                @dragover.prevent.stop="dragoverChild(ck)"
+                @drop.stop="drop(ck,$event)"
+                style="width:100%"
+            >
+                <tr>
+                    <td style="width:15px; vertical-align: top;">
+                        |
+                        <hr />
+                    </td>
+                    <td>
+                        <treeNode
+                            v-if="(child instanceof Object)"
+                            :obj="child"
+                            :id="`${id||''}.${ck}`"
+                            :dragged="localDragged"
+                            @dragged="childDragged"
+                            :accepting="acceptSibling==ck"
+                            @select="$emit('select',$event)"
+                            :selected="selected"
+                            :deleteMe="deleteMeFn(ck)"
+                            :parent="obj"
+                            :dragging="isDragging"
+                            :adding="adding"
+                        />
+                    </td>
+                </tr>
 
-            <tr v-if="acceptSibling == ck" style="color:green">
-                <td style="width:15px; white-space: noWrap">
-                    |-->
-                </td>
-                <td>
-                    <i v-if="(localDragged instanceof Object)">{{localDragged.obj.type}}</i>
-                    <!-- <treeNode
+                <tr v-if="acceptSibling == ck" style="color:green">
+                    <td style="width:15px; white-space: noWrap">|--></td>
+                    <td>
+                        <i v-if="(localDragged instanceof Object)">{{localDragged.obj.type}}</i>
+                        <!-- <treeNode
                         v-if="(localDragged instanceof Object)"
                         :obj="localDragged.obj"
                         :id="`siblig_${id||''}.${ck}`"
                         :adding="true"
-                    />-->
-                </td>
-            </tr>
-        </table>
+                        />-->
+                    </td>
+                </tr>
+            </table>
+        </template>
     </div>
 </template>
 
