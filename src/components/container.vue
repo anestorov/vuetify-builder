@@ -12,12 +12,12 @@
         <template v-if="element.content">{{element.content}}</template>
 
         <elementContainer
-            v-else
-            v-for="child in element.children"
-            :key="child.id"
+            v-for="(child, ck) in element.children"
+            :key="`${id||''}.${ck}`"
+            :id="`${id||''}.${ck}`"
             :element="child"
             :selected="localSelected"
-            @setSelected="setSelected"
+            @setSelected="setSelected(child,$event)"
         />
     </component>
 </template>
@@ -25,7 +25,7 @@
 <script>
 export default {
     name: "elementContainer",
-    props: ["element", "selected"],
+    props: ["element", "selected", "id"],
     data() {
         return {
             localSelected: false,
@@ -46,20 +46,22 @@ export default {
         },
         style() {
             return {
-                margin: this.localSelected == this.element ? "10px" : null,
-                padding: this.localSelected == this.element ? "10px" : null,
+                // margin: this.localSelected == this.element ? "10px" : null,
+                // padding: this.localSelected == this.element ? "10px" : null,
                 border:
                     this.localSelected == this.element
-                        ? "1px solid green"
-                        : this.localSelected && this.outlined
-                        ? "1px dashed gray"
-                        : null,
+                        ? "1px dashed green"
+                        : // : this.localSelected && this.outlined
+                          // ? "1px dashed gray"
+                          null,
             };
         },
     },
     methods: {
-        setSelected(event) {
-            this.localSelected = event;
+        setSelected(child, event) {
+            this.localSelected = event.selected;
+
+            if (child === event.selected) event["parent"] = this.element;
 
             this.$emit("setSelected", event);
         },
@@ -68,7 +70,7 @@ export default {
                 this.localSelected = this.element;
             else this.localSelected = null;
 
-            this.$emit("setSelected", this.localSelected);
+            this.$emit("setSelected", { selected: this.localSelected });
         },
         mouseenter(event) {
             event.preventDefault();
