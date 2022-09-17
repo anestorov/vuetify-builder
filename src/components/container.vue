@@ -25,6 +25,7 @@
 <script>
 export default {
     name: "elementContainer",
+    //inheritAttrs:false,
     props: ["element", "selected", "id"],
     data() {
         return {
@@ -41,20 +42,20 @@ export default {
         },
     },
     computed: {
-        cStyle() {
-            return {};
-        },
         style() {
-            return {
-                // margin: this.localSelected == this.element ? "10px" : null,
-                // padding: this.localSelected == this.element ? "10px" : null,
-                border:
-                    this.localSelected == this.element
-                        ? "1px dashed green"
-                        : // : this.localSelected && this.outlined
-                          // ? "1px dashed gray"
-                          null,
-            };
+            let selected = this.localSelected == this.element;
+            let border = "border: 1px dashed orange;";
+            let backgound = `background-image: repeating-linear-gradient(-45deg,transparent,transparent 20px,rgba(0,0,0,0.03) 20px,rgba(0,0,0,0.03) 40px);`;
+
+            let localStyle = selected ? border + backgound : "";
+
+            let css = this.element.css
+                ?.replaceAll("\n", "")
+                ?.replaceAll("\r", "");
+
+            return `${localStyle};${css || ""}`;
+            // margin: this.localSelected == this.element ? "10px" : null,
+            // padding: this.localSelected == this.element ? "10px" : null,
         },
     },
     methods: {

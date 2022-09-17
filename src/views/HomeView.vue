@@ -87,7 +87,7 @@
                             <v-icon>mdi-wrench-check-outline</v-icon>
                         </v-btn>
                     </v-col>
-                    
+
                     <v-col>
                         <v-btn icon x-small @click="remChild()" :disabled="!selected">
                             <v-icon>mdi-delete-outline</v-icon>
@@ -222,7 +222,28 @@
                     </v-tab-item>
 
                     <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;"></v-tab-item>
-                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;"></v-tab-item>
+                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
+                        <v-row v-if="selected && selected.bind">
+                            <v-col dense cols="12" class="mt-2">
+                                <v-textarea
+                                    label="class"
+                                    v-model="selected.bind.class"
+                                    hide-details="auto"
+                                    outlined
+                                    height="200"
+                                ></v-textarea>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-textarea
+                                    label="css"
+                                    v-model="selected.css"
+                                    hide-details="auto"
+                                    outlined
+                                    height="200"
+                                ></v-textarea>
+                            </v-col>
+                        </v-row>
+                    </v-tab-item>
                 </v-tabs>
             </div>
         </v-navigation-drawer>
@@ -293,7 +314,7 @@ export default {
         groupToggle() {
             if (!this.selected) return;
 
-            this.$set(this.selected,'grouped',!this.selected.grouped) 
+            this.$set(this.selected, "grouped", !this.selected.grouped);
         },
         copy() {
             this.copyBuffer = this.selected;
