@@ -2,8 +2,8 @@
     <component
         v-if="element && ( !element.if || values[element.if])"
         v-bind:is="element.type"
-        @mouseenter="mouseenter"
-        @mouseleave="mouseleave"
+        @mouseenter.stop.prevent="mouseenter"
+        @mouseleave.stop.prevent="mouseleave"
         @contextmenu.stop.prevent="clicked"
         v-bind="{...inSlot?.attrs,...element.bind}"
         v-on="{...inSlot?.on,...element.on}"
@@ -11,6 +11,7 @@
         @input="input"
         @change="change"
         :value="val"
+        :inputValue="inputValue"
     >
         <template v-for="(template, sk) in slots" v-slot:[template.slot]="bind">
             <elementContainer
@@ -73,6 +74,12 @@ export default {
         },
     },
     computed: {
+        inputValue() {
+            if (this.element?.model) {
+                return this.values[this.element.model];
+            }
+            return this.element?.bind?.inputValue;
+        },
         val() {
             if (this.element?.model) {
                 return this.values[this.element.model];
@@ -94,7 +101,7 @@ export default {
             let border = "border: 1px dashed orange;";
             let backgound = `background-image: repeating-linear-gradient(-45deg,transparent,transparent 20px,rgba(0,0,0,0.03) 20px,rgba(0,0,0,0.03) 40px);`;
 
-            let localStyle = selected ? border + backgound : "";
+            let localStyle = selected ? border + backgound : this.outlined;
 
             let css = this.element.css
                 ?.replaceAll("\n", "")
@@ -132,9 +139,7 @@ export default {
 
             this.$emit("setSelected", { selected: this.localSelected });
         },
-        mouseenter(event) {
-            event.preventDefault();
-            event.stopPropagation();
+        mouseenter() {
             this.outlined = true;
         },
         mouseleave() {

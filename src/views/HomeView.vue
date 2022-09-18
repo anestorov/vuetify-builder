@@ -8,7 +8,7 @@
                     :obj="elements"
                     @select="setSelected"
                     :selected="selected"
-                    style="zoom:1; line-height: 1em;"
+                    style="zoom:0.85; line-height: 1em;"
                 />
             </div>
             <div style="height:80px; border:1px solid black; padding:5px">
@@ -288,6 +288,7 @@
             :element="elements"
             :values="values"
         ></elementContainer>
+        <pre>{{values}}</pre>
     </v-container>
 </template>
 
