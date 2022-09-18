@@ -1,24 +1,49 @@
 <template>
     <component
-        v-if="element"
+        v-if="element && ( !element.if || element.if.val)"
         v-bind:is="element.type"
         @mouseenter="mouseenter"
         @mouseleave="mouseleave"
         @contextmenu.stop.prevent="clicked"
-        v-bind="element.bind"
-        v-on="element.on"
+        v-bind="{...inSlot?.attrs,...element.bind}"
+        v-on="{...inSlot?.on,...element.on}"
         :style="style"
     >
+        <template v-for="(template, sk) in slots" v-slot:[template.slot]="bind">
+            <elementContainer
+                v-for="(child, ck) in template.children"
+                :key="`${id||''}.${sk}.${ck}`"
+                :id="`${id||''}.${sk}.${ck}`"
+                :inSlot="bind"
+                :element="child"
+                :selected="localSelected"
+                @setSelected="setSelected(child,$event)"
+            />
+        </template>
+
         <template v-if="element.content">{{element.content}}</template>
 
-        <elementContainer
-            v-for="(child, ck) in element.children"
-            :key="`${id||''}.${ck}`"
-            :id="`${id||''}.${ck}`"
-            :element="child"
-            :selected="localSelected"
-            @setSelected="setSelected(child,$event)"
-        />
+        <template v-for="(child, ck) in nonslots">
+            <template v-if="child.for">
+                <elementContainer
+                    v-for="(f, fk) in child.for-0"
+                    :key="`${id||''}.${ck}.${fk}`"
+                    :id="`${id||''}.${ck}.${fk}`"
+                    :element="child"
+                    :selected="localSelected"
+                    @setSelected="setSelected(child,$event)"
+                />
+            </template>
+            <template v-else>
+                <elementContainer
+                    :key="`${id||''}.${ck}`"
+                    :id="`${id||''}.${ck}`"
+                    :element="child"
+                    :selected="localSelected"
+                    @setSelected="setSelected(child,$event)"
+                />
+            </template>
+        </template>
     </component>
 </template>
 
@@ -26,7 +51,7 @@
 export default {
     name: "elementContainer",
     //inheritAttrs:false,
-    props: ["element", "selected", "id"],
+    props: ["element", "selected", "id", "inSlot", "values"],
     data() {
         return {
             localSelected: false,
@@ -42,6 +67,16 @@ export default {
         },
     },
     computed: {
+        slots() {
+            return this.element.children.filter(
+                (v) => v.type == "slot" || v.type == "template"
+            );
+        },
+        nonslots() {
+            return this.element.children.filter(
+                (v) => v.type != "slot" && v.type != "template"
+            );
+        },
         style() {
             let selected = this.localSelected == this.element;
             let border = "border: 1px dashed orange;";

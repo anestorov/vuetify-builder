@@ -13,15 +13,8 @@
                         @contextmenu.stop.prevent="$set(obj,'grouped',!obj.grouped)&&$emit('select', {selected: obj!==selected ? obj: null, parent})"
                         :style="style"
                     >
-                        <span v-if="obj.grouped">
-                            {&nbsp;
-                            <b v-if="obj===selected">{{obj.type || 'empty'}}</b>
-                            <i v-else>{{obj.type || 'empty'}}</i>&nbsp;}
-                        </span>
-                        <span v-else>
-                            <b v-if="obj===selected">{{obj.type || 'empty'}}</b>
-                            <i v-else>{{obj.type || 'empty'}}</i>
-                        </span>
+                        <b v-if="obj===selected">{{name}}</b>
+                        <i v-else>{{name}}</i>
                     </a>
                 </td>
             </tr>
@@ -116,6 +109,13 @@ export default {
         },
     },
     computed: {
+        name() {
+            let name = this.obj.type || "empty";
+            if (this.obj.slot) name = `${name} : ${this.obj.slot}`;
+            if (this.obj.for) name = `${name} * ${this.obj.for}`;
+            if (this.obj.grouped) name = `{ ${name} }`;
+            return name;
+        },
         isDragging() {
             return this.dragging || this.localDragged?.obj == this.obj;
         },
