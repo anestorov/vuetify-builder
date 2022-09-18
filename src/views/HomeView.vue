@@ -245,7 +245,16 @@
                             <v-col cols="6">
                                 <v-text-field label="for" v-model="selected.for"></v-text-field>
                             </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="if" v-model="selected.if"></v-text-field>
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="model" v-model="selected.model"></v-text-field>
+                            </v-col>
                         </v-row>
+                        {{variables}}
                     </v-tab-item>
 
                     <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
@@ -324,6 +333,12 @@ export default {
             },
             deep: true,
         },
+        values: {
+            handler(n) {
+                window.localStorage.setItem("vueBuildData", JSON.stringify(n));
+            },
+            deep: true,
+        },
         "selected.type": {
             handler(n) {
                 if (!n) {
@@ -340,6 +355,11 @@ export default {
 
                 this.docs = tags[camelCased];
             },
+        },
+    },
+    computed: {
+        variables() {
+            return Object.keys(this.values);
         },
     },
     methods: {
@@ -508,9 +528,13 @@ export default {
     },
     mounted() {
         try {
-            let data = window.localStorage.getItem("vueBuild");
+            let structure = window.localStorage.getItem("vueBuild");
+            let data = window.localStorage.getItem("vueBuildData");
+            if (structure) structure = JSON.parse(structure);
+            if (structure instanceof Object && structure.type)
+                this.elements = structure;
             if (data) data = JSON.parse(data);
-            if (data instanceof Object && data.type) this.elements = data;
+            if (data instanceof Object) this.values = data;
         } catch (e) {
             console.log(e);
         }

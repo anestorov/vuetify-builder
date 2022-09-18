@@ -1,6 +1,6 @@
 <template>
     <component
-        v-if="element && ( !element.if || element.if.val)"
+        v-if="element && ( !element.if || values[element.if])"
         v-bind:is="element.type"
         @mouseenter="mouseenter"
         @mouseleave="mouseleave"
@@ -8,6 +8,9 @@
         v-bind="{...inSlot?.attrs,...element.bind}"
         v-on="{...inSlot?.on,...element.on}"
         :style="style"
+        @input="input"
+        @change="change"
+        :value="val"
     >
         <template v-for="(template, sk) in slots" v-slot:[template.slot]="bind">
             <elementContainer
@@ -18,10 +21,11 @@
                 :element="child"
                 :selected="localSelected"
                 @setSelected="setSelected(child,$event)"
+                :values="values"
             />
         </template>
 
-        <template v-if="element.content">{{element.content}}</template>
+        <template v-if="element.content">{{element.model ? values[element.model] : element.content}}</template>
 
         <template v-for="(child, ck) in nonslots">
             <template v-if="child.for">
@@ -32,6 +36,7 @@
                     :element="child"
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
+                    :values="values"
                 />
             </template>
             <template v-else>
@@ -41,6 +46,7 @@
                     :element="child"
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
+                    :values="values"
                 />
             </template>
         </template>
@@ -67,6 +73,12 @@ export default {
         },
     },
     computed: {
+        val() {
+            if (this.element?.model) {
+                return this.values[this.element.model];
+            }
+            return this.element?.bind?.value;
+        },
         slots() {
             return this.element.children.filter(
                 (v) => v.type == "slot" || v.type == "template"
@@ -94,6 +106,18 @@ export default {
         },
     },
     methods: {
+        input(val) {
+            if (this.element?.model)
+                this.$set(this.values, this.element.model, val);
+            else if (this.element?.on?.input instanceof Function)
+                this.element.on.input(val);
+        },
+        change(val) {
+            if (this.element?.model)
+                this.$set(this.values, this.element.model, val);
+            else if (this.element?.on?.change instanceof Function)
+                this.element.on.change(val);
+        },
         setSelected(child, event) {
             this.localSelected = event.selected;
 
