@@ -23,6 +23,7 @@
                 :selected="localSelected"
                 @setSelected="setSelected(child,$event)"
                 :values="values"
+                :forVals="forVals"
             />
         </template>
 
@@ -49,6 +50,7 @@
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
                     :values="values"
+                    :forVals="forVals"
                 />
             </template>
         </template>
