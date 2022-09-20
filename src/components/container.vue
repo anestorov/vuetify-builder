@@ -1,6 +1,6 @@
 <template>
     <component
-        v-if="element && ( !element.if || values[element.if])"
+        v-if="element && ( ifval )"
         v-bind:is="element.type"
         @mouseenter.stop.prevent="mouseenter"
         @mouseleave.stop.prevent="mouseleave"
@@ -16,8 +16,8 @@
         <template v-for="(template, sk) in slots" v-slot:[template.slot]="bind">
             <elementContainer
                 v-for="(child, ck) in template.children"
-                :key="`${id||''}.${sk}.${ck}`"
-                :id="`${id||''}.${sk}.${ck}`"
+                :key="`${id||'0'}.${sk}.${ck}`"
+                :id="`${id||'0'}.${sk}.${ck}`"
                 :inSlot="bind"
                 :element="child"
                 :selected="localSelected"
@@ -26,24 +26,25 @@
             />
         </template>
 
-        <template v-if="element.content">{{element.model ? values[element.model] : element.content}}</template>
+        <template v-if="element.children.length<=0">{{val || element.content }}</template>
 
         <template v-for="(child, ck) in nonslots">
             <template v-if="child.for">
                 <elementContainer
-                    v-for="(f, fk) in child.for-0"
-                    :key="`${id||''}.${ck}.${fk}`"
-                    :id="`${id||''}.${ck}.${fk}`"
+                    v-for="(f, fk) in forVal(child)"
+                    :key="`${id||'0'}.${ck}.${fk}`"
+                    :id="`${id||'0'}.${ck}.${fk}`"
                     :element="child"
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
                     :values="values"
+                    :forVals="localForVals(child,f,fk,ck)"
                 />
             </template>
             <template v-else>
                 <elementContainer
-                    :key="`${id||''}.${ck}`"
-                    :id="`${id||''}.${ck}`"
+                    :key="`${id||'0'}.${ck}`"
+                    :id="`${id||'0'}.${ck}`"
                     :element="child"
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
@@ -58,7 +59,7 @@
 export default {
     name: "elementContainer",
     //inheritAttrs:false,
-    props: ["element", "selected", "id", "inSlot", "values"],
+    props: ["element", "selected", "id", "inSlot", "values", "forVals"],
     data() {
         return {
             localSelected: false,
@@ -74,15 +75,32 @@ export default {
         },
     },
     computed: {
+        ifval() {
+            if (!this.element.if) return true;
+            if (this.element.if === true) return true;
+            if (this.element.if === false) return false;
+            if (this.element.if === "") return true;
+            return this.values[this.element.if];
+        },
         inputValue() {
             if (this.element?.model) {
-                return this.values[this.element.model];
+                if (
+                    this.forVals instanceof Object &&
+                    this.forVals[this.element.model] !== undefined
+                )
+                    return this.forVals[this.element.model];
+                else return this.values[this.element.model];
             }
             return this.element?.bind?.inputValue;
         },
         val() {
             if (this.element?.model) {
-                return this.values[this.element.model];
+                if (
+                    this.forVals instanceof Object &&
+                    this.forVals[this.element.model] !== undefined
+                )
+                    return this.forVals[this.element.model];
+                else return this.values[this.element.model];
             }
             return this.element?.bind?.value;
         },
@@ -113,6 +131,49 @@ export default {
         },
     },
     methods: {
+        json(val) {
+            if (typeof val == "string" && val.indexOf('"') >= 0) {
+                return JSON.parse(val);
+            }
+            return val;
+        },
+        forVal(child) {
+            let f = this.json(child.for);
+
+            if (f instanceof Object) {
+                if (f.value) return f.value;
+                if (f.model) {
+                    if (
+                        this.forVals instanceof Object &&
+                        this.forVals[this.element.model] !== undefined
+                    ) {
+                        if (this.forVals[this.element.model] - 0 > 0)
+                            return this.forVals[this.element.model] - 0;
+                        return this.forVals[this.element.model];
+                    }
+                    if (this.values[f.model] - 0 > 0)
+                        return this.values[f.model] - 0;
+                    return this.values[f.model];
+                }
+            } else {
+                if (f - 0 > 0) return f - 0;
+                return f;
+            }
+        },
+        localForVals(child, fVal, fKey, pk) {
+            let key = `for.${this.id || "0"}.${pk}`;
+
+            let f = this.json(child.for);
+
+            if (f instanceof Object && f.key) {
+                key = f.key;
+            }
+
+            let val = {};
+            val[key] = fVal;
+
+            return { ...this.forVals, ...val };
+        },
         input(val) {
             if (this.element?.model)
                 this.$set(this.values, this.element.model, val);

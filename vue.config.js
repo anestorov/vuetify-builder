@@ -4,6 +4,6 @@ module.exports = defineConfig({
     'vuetify'
   ],
 
-  runtimeCompiler: true
+  //runtimeCompiler: true
 
 })

@@ -112,7 +112,10 @@ export default {
         name() {
             let name = this.obj.type || "empty";
             if (this.obj.slot) name = `${name} : ${this.obj.slot}`;
-            if (this.obj.for) name = `${name} * ${this.obj.for}`;
+            if (this.obj.if) name = `${name} ? `;
+            if (this.obj.model) name = `${name} [] `;
+            if (this.obj.for) name = `${name} * `;
+
             if (this.obj.grouped) name = `{ ${name} }`;
             return name;
         },

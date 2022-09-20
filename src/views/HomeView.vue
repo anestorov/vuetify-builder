@@ -1,8 +1,15 @@
 <template>
     <v-container fluid>
-        <v-navigation-drawer right app permanent width="25vw">
+        <v-navigation-drawer
+            right
+            app
+            permanent
+            :width="navWidth"
+            id="nav"
+        >
             <div
-                style="height:calc(52vh - 135px); overflow:auto; border:1px solid black; padding:5px"
+                id="cell1"
+                style="height:50vh; overflow:auto; border:1px solid black; padding:5px; resize: vertical;"
             >
                 <treeNode
                     :obj="elements"
@@ -11,7 +18,7 @@
                     style="zoom:0.85; line-height: 1em;"
                 />
             </div>
-            <div style="height:80px; border:1px solid black; padding:5px">
+            <div style="height:80px; border:1px solid black; padding:5px;">
                 <v-row dense>
                     <v-col>
                         <v-btn
@@ -114,15 +121,16 @@
                     </v-col>
                 </v-row>
             </div>
-            <div style="border:1px solid black; padding:3px">
-                <v-tabs style="zoom:0.8">
+            <div style="height: calc(50vh - 81px); border:1px solid black; padding:3px;" id="cell2">
+                <v-tabs style="zoom:0.8;">
                     <v-tab>Props</v-tab>
                     <v-tab>Slots</v-tab>
                     <v-tab>Data</v-tab>
                     <v-tab>CSS</v-tab>
 
                     <v-tab-item
-                        style="height:60vh ; overflow-y:auto; overflow-x: hidden; padding:10px"
+                        style=" overflow-y:auto; overflow-x: hidden; padding:10px;"
+                        class="cell3"
                     >
                         <v-row v-if="docs" dense class="MyBolder">
                             <v-col cols="12" v-for="attr in docs.attributes" :key="attr.name">
@@ -195,7 +203,10 @@
                         </v-row>
                     </v-tab-item>
 
-                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
+                    <v-tab-item
+                        style="overflow-y:auto; overflow-x: hidden; padding:10px;"
+                        class="cell3"
+                    >
                         <ul v-if="docs">
                             <li v-for="slot in docs.slots" :key="slot.name">
                                 <b>{{slot.name}}</b>
@@ -229,7 +240,10 @@
                         </ul>
                     </v-tab-item>
 
-                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
+                    <v-tab-item
+                        style="overflow-y:auto; overflow-x: hidden; padding:10px;"
+                        class="cell3"
+                    >
                         <v-row v-if="selected && selected.bind">
                             <v-col cols="6">
                                 <v-text-field label="value" v-model="selected.bind.value"></v-text-field>
@@ -254,10 +268,13 @@
                                 <v-text-field label="model" v-model="selected.model"></v-text-field>
                             </v-col>
                         </v-row>
-                        {{variables}}
+                        {{values}}
                     </v-tab-item>
 
-                    <v-tab-item style="height:60vh ; overflow-y:auto; overflow-x: hidden;">
+                    <v-tab-item
+                        style="overflow-y:auto; overflow-x: hidden; padding:10px;"
+                        class="cell3"
+                    >
                         <v-row v-if="selected && selected.bind">
                             <v-col dense cols="12" class="mt-2">
                                 <v-textarea
@@ -288,7 +305,6 @@
             :element="elements"
             :values="values"
         ></elementContainer>
-        <pre>{{values}}</pre>
     </v-container>
 </template>
 
@@ -315,6 +331,7 @@ export default {
             copyBuffer: null,
             settingsBuffer: null,
             hints: {},
+            navWidth: 350,
 
             elements: {
                 id: "0",
@@ -528,6 +545,32 @@ export default {
         },
     },
     mounted() {
+        let navH = document.querySelector("#nav").offsetHeight;
+
+        new ResizeObserver((entries) => {
+            let entry = entries[0];
+            let setSize = (w, h) => {
+                let c2 = document.querySelector("#cell2");
+                let c3s = document.querySelectorAll(".cell3");
+                if (c2) c2.style.height = `${navH - h - 81}px`;
+
+                if (c3s) {
+                    c3s.forEach((c3) => {
+                        c3.style.height = `${(navH - h - 130) / 0.8}px`;
+                    });
+                }
+            };
+
+            if (entry.borderBoxSize) {
+                setSize(
+                    entry.borderBoxSize[0].inlineSize,
+                    entry.borderBoxSize[0].blockSize
+                );
+            } else {
+                setSize(entry.contentRect.width, entry.contentRect.height);
+            }
+        }).observe(document.querySelector("#cell1"));
+
         try {
             let structure = window.localStorage.getItem("vueBuild");
             let data = window.localStorage.getItem("vueBuildData");
