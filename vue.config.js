@@ -5,6 +5,7 @@ module.exports = defineConfig({
     'vuetify'
   ],
   outputDir: "./docs",
+  publicPath: "./"
 
   //runtimeCompiler: true
 
