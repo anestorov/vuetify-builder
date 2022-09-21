@@ -15,84 +15,214 @@
             <div style="height:80px; border:1px solid black; padding:5px;">
                 <v-row dense>
                     <v-col>
-                        <v-btn
-                            icon
-                            x-small
-                            @click="addChild(null,true)"
-                            @contextmenu.stop.prevent="addChild(null,false)"
-                            :disabled="!selected"
-                        >
-                            <v-icon>mdi-file-document-plus-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="addChild(null,true)"
+                                    @contextmenu.stop.prevent="addChild(null,false)"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-file-document-plus-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Appends Child
+                                <br />
+                                <i>Right click to prepend</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn
-                            icon
-                            x-small
-                            @click="addSibling(null,true)"
-                            @contextmenu.stop.prevent="addSibling(null,false)"
-                            :disabled="!selected"
-                        >
-                            <v-icon>mdi-file-arrow-up-down-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="addSibling(null,true)"
+                                    @contextmenu.stop.prevent="addSibling(null,false)"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-file-arrow-up-down-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Appends Sibling
+                                <br />
+                                <i>Right click to prepend</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn icon x-small @click="groupToggle()" :disabled="!selected">
-                            <v-icon>mdi-table-merge-cells</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="groupToggle()"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-table-merge-cells</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Group / Ungroup Components
+                                <br />
+                                <i>* Right click component tree</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn icon x-small @click="copy()" :disabled="!selected">
-                            <v-icon>mdi-content-copy</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="copy(true)"
+                                    @contextmenu.stop.prevent="copy(false)"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-content-copy</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Copy Component Bundle
+                                <br />
+                                <i>Right click to copy only selected</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn icon x-small @click="cut()" :disabled="!selected">
-                            <v-icon>mdi-content-cut</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="cut(true)"
+                                    @contextmenu.stop.prevent="cut(false)"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-content-cut</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Cut Component Bundle
+                                <br />
+                                <i>Right click to cut selected only</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn
-                            icon
-                            x-small
-                            @click="pasteChild(true)"
-                            @contextmenu.stop.prevent="pasteChild(false)"
-                            :disabled="!copyBuffer || !selected"
-                        >
-                            <v-icon>mdi-clipboard-plus-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="pasteChild(true)"
+                                    @contextmenu.stop.prevent="pasteChild(false)"
+                                    :disabled="!copyBuffer || !selected"
+                                >
+                                    <v-icon>mdi-clipboard-plus-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Paste Appending Child
+                                <br />
+                                <i>Right click to Prepend</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn
-                            icon
-                            x-small
-                            @click="pasteSibling(true)"
-                            @contextmenu.stop.prevent="pasteSibling(false)"
-                            :disabled="!copyBuffer || !selected"
-                        >
-                            <v-icon>mdi-clipboard-flow-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="pasteSibling(true)"
+                                    @contextmenu.stop.prevent="pasteSibling(false)"
+                                    :disabled="!copyBuffer || !selected"
+                                >
+                                    <v-icon>mdi-clipboard-flow-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Paste Appending Sibling
+                                <br />
+                                <i>Right click to Prepend</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn icon x-small @click="copySettings()" :disabled="!selected">
-                            <v-icon>mdi-wrench-cog-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="copySettings()"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-wrench-cog-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">Copy Properties</span>
+                        </v-tooltip>
                     </v-col>
                     <v-col>
-                        <v-btn
-                            icon
-                            x-small
-                            @click="pasteSettings()"
-                            :disabled="!settingsBuffer || !selected"
-                        >
-                            <v-icon>mdi-wrench-check-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="pasteSettings()"
+                                    :disabled="!settingsBuffer || !selected"
+                                >
+                                    <v-icon>mdi-wrench-check-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">Paste Properties</span>
+                        </v-tooltip>
                     </v-col>
 
                     <v-col>
-                        <v-btn icon x-small @click="remChild()" :disabled="!selected">
-                            <v-icon>mdi-delete-outline</v-icon>
-                        </v-btn>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    @click="remChild(true)"
+                                    @contextmenu.stop.prevent="remChild(false)"
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-delete-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Remove Component Bundle
+                                <br />
+                                <i>Right click to remove selected only</i>
+                            </span>
+                        </v-tooltip>
                     </v-col>
                 </v-row>
                 <v-row v-if="selected" dense>
@@ -309,6 +439,10 @@ import treeNode from "@/components/treeNode.vue";
 
 let tags = {};
 webtypes.contributions.html.tags.forEach((tag) => {
+    tag.attributes.push({
+        name: "title",
+        description: "HTMLs title attribute",
+    });
     tags[tag.name] = tag;
 });
 
@@ -386,12 +520,18 @@ export default {
 
             this.$set(this.selected, "grouped", !this.selected.grouped);
         },
-        copy() {
-            this.copyBuffer = this.selected;
+        copy(all) {
+            if (all) {
+                this.copyBuffer = JSON.parse(JSON.stringify(this.selected));
+            } else {
+                let s = JSON.parse(JSON.stringify(this.selected));
+                s.children = [];
+                this.copyBuffer = s;
+            }
         },
-        cut() {
-            this.copyBuffer = this.selected;
-            this.remChild();
+        cut(all) {
+            this.copy(all);
+            this.remChild(all);
         },
         pasteSibling(append) {
             if (!this.copyBuffer) {
@@ -485,36 +625,52 @@ export default {
                 this.selected = newElm;
             }
         },
-        remChild() {
+        remChild(all) {
             if (!this.selected) return;
             if (!this.parentOfSelected) return;
 
-            let parent = this.parentOfSelected;
-            let pos = parent.children.indexOf(this.selected);
+            if (!window.confirm("Do you want to remove that component?"))
+                return;
+            if (all) {
+                let parent = this.parentOfSelected;
+                let pos = parent.children.indexOf(this.selected);
 
-            console.log(parent, pos);
-            if (pos >= 0) parent.children.splice(pos, 1);
+                if (pos >= 0) parent.children.splice(pos, 1);
 
-            if (parent.children.length > 0) {
-                if (pos == 0) {
-                    this.selected = parent.children[pos];
-                } else if (pos > 0 && pos < parent.children.length - 1)
-                    this.selected = parent.children[pos - 1];
-                else
-                    this.selected = parent.children[parent.children.length - 1];
-            } else {
-                let newParent = this._findParent(this.parentOfSelected);
-                if (newParent) {
-                    console.log(newParent);
-                    this.selected = this.parentOfSelected;
-                    this.parentOfSelected = newParent;
+                if (parent.children.length > 0) {
+                    if (pos == 0) {
+                        this.selected = parent.children[pos];
+                    } else if (pos > 0 && pos < parent.children.length - 1)
+                        this.selected = parent.children[pos - 1];
+                    else
+                        this.selected =
+                            parent.children[parent.children.length - 1];
                 } else {
-                    this.selected = null;
-                    this.parentOfSelected = null;
+                    let newParent = this._findParent(this.parentOfSelected);
+                    if (newParent) {
+                        console.log(newParent);
+                        this.selected = this.parentOfSelected;
+                        this.parentOfSelected = newParent;
+                    } else {
+                        this.selected = null;
+                        this.parentOfSelected = null;
+                    }
                 }
-            }
+            } else {
+                let parent = this.parentOfSelected;
+                let selected = this.selected;
 
-            console.log(this.selected, this.parentOfSelected);
+                let pos = parent.children.indexOf(this.selected);
+
+                if (pos >= 0) parent.children.splice(pos, 1);
+
+                selected.children.forEach((c) => {
+                    parent.children.push(c);
+                });
+
+                this.selected = parent;
+                this.parentOfSelected = this._findParent(parent);
+            }
         },
 
         _findParent(current, obj) {
