@@ -5,8 +5,8 @@
         @mouseenter.stop.prevent="mouseenter"
         @mouseleave.stop.prevent="mouseleave"
         @contextmenu.stop.prevent="clicked"
-        v-bind="{...inSlot?.attrs,...element.bind}"
-        v-on="{...inSlot?.on,...element.on}"
+        v-bind="vbind"
+        v-on="von"
         :style="style"
         @input="input"
         @change="change"
@@ -77,6 +77,64 @@ export default {
         },
     },
     computed: {
+        vbind() {
+            let obj = {};
+            Object.keys(this.element.bind).forEach((k) => {
+                let v = this.element.bind[k];
+
+                if (String(v).search(/{{(.*?)}}/) >= 0) {
+                    let vars1 = Object.keys(this.values || {});
+                    let vars2 = Object.keys(this.forVals || {});
+
+                    obj[k] = String(v).replaceAll(/{{(.*?)}}/g, (m) => {
+                        m = m.replaceAll("{", "").replaceAll("}", "");
+                        try {
+                            return Function(
+                                "obj1",
+                                "obj2",
+                                `const {${vars1}} = obj1; const {${vars2}} = obj2; return (${m})`
+                            ).call(this, this.values || {}, this.forVals || {});
+                        } catch (e) {
+                            //console.log(e);
+                        }
+                    });
+                    // } else if (String(v).indexOf("$") >= 0) {
+                    //     obj[k] = String(v).replaceAll(/\$[\w.]+/g, (m) => {
+                    //         m = String(m).substring(1);
+
+                    //         let ids = [m];
+                    //         let res = null;
+
+                    //         if (String(m).indexOf(".")) {
+                    //             ids = String(m).split(".");
+                    //         }
+
+                    //         if (
+                    //             this.forVals instanceof Object &&
+                    //             this.forVals[ids[0]] !== undefined
+                    //         ) {
+                    //             res = this.forVals[ids[0]];
+                    //         } else {
+                    //             res = this.values[ids[0]];
+                    //         }
+
+                    //         if (ids.length > 1) {
+                    //             for (let i = 1; i < ids.length; i++) {
+                    //                 if (res instanceof Object) res = res[ids[i]];
+                    //             }
+                    //         }
+
+                    //         return res;
+                    //     });
+                } else {
+                    obj[k] = v;
+                }
+            });
+            return { ...this.inSlot?.attrs, ...obj };
+        },
+        von() {
+            return { ...this.inSlot?.on, ...this.element.on };
+        },
         ifval() {
             if (!this.element.if) return true;
             if (this.element.if === true) return true;
@@ -93,7 +151,7 @@ export default {
                     return this.forVals[this.element.model];
                 else return this.values[this.element.model];
             }
-            return this.element?.bind?.inputValue;
+            return this.vbind?.inputValue;
         },
         val() {
             if (this.element?.model) {
@@ -104,7 +162,7 @@ export default {
                     return this.forVals[this.element.model];
                 else return this.values[this.element.model];
             }
-            return this.element?.bind?.value;
+            return this.vbind?.value;
         },
         slots() {
             return this.element.children.filter(

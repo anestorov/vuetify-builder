@@ -66,6 +66,27 @@
                                     x-small
                                     v-bind="attrs"
                                     v-on="on"
+                                    
+                                    :disabled="!selected"
+                                >
+                                    <v-icon>mdi-content-save-outline</v-icon>
+                                </v-btn>
+                            </template>
+                            <span class="text-caption">
+                                Save Component Bundle
+                                <br />
+                                <i>to be implemented ...</i>
+                            </span>
+                        </v-tooltip>
+                    </v-col>
+                    <v-col>
+                        <v-tooltip top color="success">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn
+                                    icon
+                                    x-small
+                                    v-bind="attrs"
+                                    v-on="on"
                                     @click="groupToggle()"
                                     :disabled="!selected"
                                 >
@@ -475,13 +496,13 @@ export default {
     watch: {
         elements: {
             handler(n) {
-                window.localStorage.setItem("VueBuild", JSON.stringify(n));
+                window.localStorage.setItem("VueBuild2", JSON.stringify(n));
             },
             deep: true,
         },
         values: {
             handler(n) {
-                window.localStorage.setItem("VueBuildData", JSON.stringify(n));
+                window.localStorage.setItem("VueBuildData2", JSON.stringify(n));
             },
             deep: true,
         },
@@ -722,15 +743,15 @@ export default {
         }).observe(document.querySelector("#cell1"));
 
         try {
-            let structure = window.localStorage.getItem("VueBuild");
-            let data = window.localStorage.getItem("VueBuildData");
+            let structure = window.localStorage.getItem("VueBuild2");
+            let data = window.localStorage.getItem("VueBuildData2");
 
             if (structure) structure = JSON.parse(structure);
             if (structure instanceof Object && structure.type) {
                 this.elements = structure;
             } else {
                 this.elements = JSON.parse(
-                    `{"id":"0","type":"v-container","bind":{},"on":{},"children":[{"type":"v-card","children":[{"type":"v-toolbar","children":[{"type":"span","content":"Label","children":[],"bind":{},"on":{}},{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-close","children":[],"bind":{},"on":{}}],"bind":{"icon":true},"on":{}}],"bind":{"height":"30","color":"primary","dark":true},"on":{},"grouped":true},{"type":"v-card-text","children":[{"type":"v-row","children":[{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"First Name","hide-details":false},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Last Name","hide-details":false},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Middle Name","hide-details":false},"on":{}}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"span","content":"List Items","children":[],"bind":{"class":"text-h6"},"on":{}},{"type":"ul","children":[{"type":"li","children":[],"bind":{"cols":"12","class":"my-3"},"on":{},"for":"{\\"key\\":\\"for\\",\\"model\\":\\"rows\\"}","model":"for"}],"bind":{},"on":{}},{"type":"v-text-field","content":null,"children":[],"bind":{"prefix":"Number of list items: ","type":"number"},"on":{},"model":"rows"}],"bind":{},"on":{},"grouped":false},{"type":"v-card-actions","children":[{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-arrow-up","children":[],"bind":{"left":true},"on":{}},{"type":"span","content":"save","children":[],"bind":{},"on":{}}],"bind":{"outlined":true,"color":"success"},"on":{}}],"bind":{},"on":{},"grouped":true}],"bind":{},"on":{}}]}`
+                    `{"id":"0","type":"v-container","bind":{},"on":{},"children":[{"type":"v-card","children":[{"type":"v-toolbar","children":[{"type":"span","content":"Label","children":[],"bind":{},"on":{},"model":"title"},{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-close","children":[],"bind":{},"on":{}}],"bind":{"icon":true},"on":{}}],"bind":{"height":"30","color":"{{ color.hexa }}","dark":true},"on":{},"grouped":false},{"type":"v-card-text","children":[{"type":"v-row","children":[{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Number of Lines","hide-details":false,"type":"number"},"on":{},"model":"rows"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Card Title","hide-details":false},"on":{},"model":"title"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"{{title}} Buttot"},"on":{},"model":"save"}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"span","content":"List Items ","children":[],"bind":{"class":"text-h6"},"on":{}},{"type":"v-row","children":[{"type":"v-col","content":null,"children":[{"type":"ul","children":[{"type":"li","children":[],"bind":{"cols":"12","class":"{{ 'mx-' + forV }} my-2","value":"{{forV}}th Element"},"on":{},"for":"{\\"key\\":\\"forV\\",\\"model\\":\\"rows\\"}","model":""}],"bind":{},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-color-picker","content":null,"children":[],"bind":{"hide-inputs":true,"mode":"rgba"},"on":{},"model":"color"}],"bind":{"cols":"auto"},"on":{}}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"v-card-actions","children":[{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","content":null,"children":[{"type":"v-icon","content":"mdi-content-save","children":[],"bind":{"left":true},"on":{}},{"type":"span","content":"Save","children":[],"bind":{},"on":{},"model":"save"}],"bind":{"title":"opsss","color":"success"},"on":{},"grouped":false}],"bind":{},"on":{},"grouped":false}],"bind":{},"on":{}}]}`
                 );
                 console.log(this.elements);
             }
@@ -739,7 +760,7 @@ export default {
             if (data instanceof Object) {
                 this.values = data;
             } else {
-                this.values = JSON.parse(`{"rows":"4"}`);
+                this.values = JSON.parse(`{"rows":"6","color":{"alpha":0.7476638366128797,"hex":"#0D45EB","hexa":"#0D45EBBF","hsla":{"h":225.04209714515187,"s":0.8915509990850499,"l":0.4863733520507813,"a":0.7476638366128797},"hsva":{"h":225.04209714515187,"s":0.9426666259765625,"v":0.92,"a":0.7476638366128797},"hue":225.04209714515187,"rgba":{"r":13,"g":69,"b":235,"a":0.7476638366128797}},"title":"My Card","save":"Save Me"}`);
                 console.log(this.values);
             }
         } catch (e) {
