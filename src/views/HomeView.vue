@@ -1,12 +1,6 @@
 <template>
     <v-container fluid>
-        <v-navigation-drawer
-            right
-            app
-            permanent
-            :width="navWidth"
-            id="nav"
-        >
+        <v-navigation-drawer right app permanent :width="navWidth" id="nav">
             <div
                 id="cell1"
                 style="height:50vh; overflow:auto; border:1px solid black; padding:5px; resize: vertical;"
@@ -347,13 +341,13 @@ export default {
     watch: {
         elements: {
             handler(n) {
-                window.localStorage.setItem("vueBuild", JSON.stringify(n));
+                window.localStorage.setItem("VueBuild", JSON.stringify(n));
             },
             deep: true,
         },
         values: {
             handler(n) {
-                window.localStorage.setItem("vueBuildData", JSON.stringify(n));
+                window.localStorage.setItem("VueBuildData", JSON.stringify(n));
             },
             deep: true,
         },
@@ -572,13 +566,26 @@ export default {
         }).observe(document.querySelector("#cell1"));
 
         try {
-            let structure = window.localStorage.getItem("vueBuild");
-            let data = window.localStorage.getItem("vueBuildData");
+            let structure = window.localStorage.getItem("VueBuild");
+            let data = window.localStorage.getItem("VueBuildData");
+
             if (structure) structure = JSON.parse(structure);
-            if (structure instanceof Object && structure.type)
+            if (structure instanceof Object && structure.type) {
                 this.elements = structure;
+            } else {
+                this.elements = JSON.parse(
+                    `{"id":"0","type":"v-container","bind":{},"on":{},"children":[{"type":"v-card","children":[{"type":"v-toolbar","children":[{"type":"span","content":"Label","children":[],"bind":{},"on":{}},{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-close","children":[],"bind":{},"on":{}}],"bind":{"icon":true},"on":{}}],"bind":{"height":"30","color":"primary","dark":true},"on":{},"grouped":true},{"type":"v-card-text","children":[{"type":"v-row","children":[{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"First Name","hide-details":false},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Last Name","hide-details":false},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Middle Name","hide-details":false},"on":{}}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"span","content":"List Items","children":[],"bind":{"class":"text-h6"},"on":{}},{"type":"ul","children":[{"type":"li","children":[],"bind":{"cols":"12","class":"my-3"},"on":{},"for":"{\\"key\\":\\"for\\",\\"model\\":\\"rows\\"}","model":"for"}],"bind":{},"on":{}},{"type":"v-text-field","content":null,"children":[],"bind":{"prefix":"Number of list items: ","type":"number"},"on":{},"model":"rows"}],"bind":{},"on":{},"grouped":false},{"type":"v-card-actions","children":[{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-arrow-up","children":[],"bind":{"left":true},"on":{}},{"type":"span","content":"save","children":[],"bind":{},"on":{}}],"bind":{"outlined":true,"color":"success"},"on":{}}],"bind":{},"on":{},"grouped":true}],"bind":{},"on":{}}]}`
+                );
+                console.log(this.elements);
+            }
+
             if (data) data = JSON.parse(data);
-            if (data instanceof Object) this.values = data;
+            if (data instanceof Object) {
+                this.values = data;
+            } else {
+                this.values = JSON.parse(`{"rows":"4"}`);
+                console.log(this.values);
+            }
         } catch (e) {
             console.log(e);
         }
