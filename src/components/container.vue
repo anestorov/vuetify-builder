@@ -13,12 +13,15 @@
         :value="val"
         :inputValue="inputValue"
     >
-        <template v-for="(template, sk) in slots" v-slot:[template.slot]="bind">
+        <template v-if="element.children.length<=0">{{val || element.content }}</template>
+
+        <template v-for="(slot,sk) in slots1" v-slot:[slot.slot1]="slotObj">
+            <template v-if="slot.children.length<=0">{{ slot.content }}</template>
             <elementContainer
-                v-for="(child, ck) in template.children"
+                v-for="(child, ck) in slot.children"
                 :key="`${id||'0'}.${sk}.${ck}`"
                 :id="`${id||'0'}.${sk}.${ck}`"
-                :inSlot="bind"
+                :inSlot="slotObj"
                 :element="child"
                 :selected="localSelected"
                 @setSelected="setSelected(child,$event)"
@@ -26,8 +29,19 @@
                 :forVals="forVals"
             />
         </template>
-
-        <template v-if="element.children.length<=0">{{val || element.content }}</template>
+        <template v-for="(slot,sk) in slots2" v-slot:[slot.slot2]>
+            <template v-if="slot.children.length<=0">{{ slot.content }}</template>
+            <elementContainer
+                v-for="(child, ck) in slot.children"
+                :key="`${id||'0'}.${sk}.${ck}`"
+                :id="`${id||'0'}.${sk}.${ck}`"
+                :element="child"
+                :selected="localSelected"
+                @setSelected="setSelected(child,$event)"
+                :values="values"
+                :forVals="forVals"
+            />
+        </template>
 
         <template v-for="(child, ck) in nonslots">
             <template v-if="child.for">
@@ -83,20 +97,9 @@ export default {
                 let v = this.element.bind[k];
 
                 if (String(v).search(/{{(.*?)}}/) >= 0) {
-                    let vars1 = Object.keys(this.values || {});
-                    let vars2 = Object.keys(this.forVals || {});
-
                     obj[k] = String(v).replaceAll(/{{(.*?)}}/g, (m) => {
                         m = m.replaceAll("{", "").replaceAll("}", "");
-                        try {
-                            return Function(
-                                "obj1",
-                                "obj2",
-                                `const {${vars1}} = obj1; const {${vars2}} = obj2; return (${m})`
-                            ).call(this, this.values || {}, this.forVals || {});
-                        } catch (e) {
-                            //console.log(e);
-                        }
+                        return this.expr(m);
                     });
                     // } else if (String(v).indexOf("$") >= 0) {
                     //     obj[k] = String(v).replaceAll(/\$[\w.]+/g, (m) => {
@@ -133,14 +136,19 @@ export default {
             return { ...this.inSlot?.attrs, ...obj };
         },
         von() {
-            return { ...this.inSlot?.on, ...this.element.on };
+            let obj = {};
+            Object.keys(this.element.on).forEach((k) => {
+                obj[k] = ($event) => this.expr(this.element.on[k], $event);
+            });
+            return { ...this.inSlot?.on, ...obj };
         },
         ifval() {
             if (!this.element.if) return true;
-            if (this.element.if === true) return true;
-            if (this.element.if === false) return false;
-            if (this.element.if === "") return true;
-            return this.values[this.element.if];
+            // if (this.element.if === true) return true;
+            // if (this.element.if === false) return false;
+            // if (this.element.if === "") return true;
+            // return this.values[this.element.if];
+            return this.expr(this.element.if);
         },
         inputValue() {
             if (this.element?.model) {
@@ -164,15 +172,22 @@ export default {
             }
             return this.vbind?.value;
         },
-        slots() {
+        slots1() {
             return this.element.children.filter(
-                (v) => v.type == "slot" || v.type == "template"
+                (v) => v.type == "slot" || (v.type == "template" && v.slot1)
+            );
+        },
+        slots2() {
+            return this.element.children.filter(
+                (v) => v.type == "slot" || (v.type == "template" && v.slot2)
             );
         },
         nonslots() {
-            return this.element.children.filter(
+            let res = this.element.children.filter(
                 (v) => v.type != "slot" && v.type != "template"
             );
+            //console.log("NO", this.element.type, res);
+            return res;
         },
         style() {
             let selected = this.localSelected == this.element;
@@ -191,6 +206,21 @@ export default {
         },
     },
     methods: {
+        expr(val, event) {
+            let vars1 = Object.keys(this.values || {});
+            let vars2 = Object.keys(this.forVals || {});
+
+            try {
+                return Function(
+                    "obj1",
+                    "obj2",
+                    "$event",
+                    `const {${vars1}} = obj1; const {${vars2}} = obj2; return (${val})`
+                ).call(this, this.values || {}, this.forVals || {}, event);
+            } catch (e) {
+                //console.log(e);
+            }
+        },
         json(val) {
             if (typeof val == "string" && val.indexOf('"') >= 0) {
                 return JSON.parse(val);

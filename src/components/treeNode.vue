@@ -111,7 +111,8 @@ export default {
     computed: {
         name() {
             let name = this.obj.type || "empty";
-            if (this.obj.slot) name = `${name} : ${this.obj.slot}`;
+            if (this.obj.slot1) name = `${name} : ${this.obj.slot1}`;
+            if (this.obj.slot2) name = `${name} : ${this.obj.slot2}`;
             if (this.obj.if) name = `${name} ? `;
             if (this.obj.model) name = `${name} [] `;
             if (this.obj.for) name = `${name} * `;

@@ -61,14 +61,7 @@
                     <v-col>
                         <v-tooltip top color="success">
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn
-                                    icon
-                                    x-small
-                                    v-bind="attrs"
-                                    v-on="on"
-                                    
-                                    :disabled="!selected"
-                                >
+                                <v-btn icon x-small v-bind="attrs" v-on="on" :disabled="!selected">
                                     <v-icon>mdi-content-save-outline</v-icon>
                                 </v-btn>
                             </template>
@@ -267,11 +260,11 @@
                 </v-row>
             </div>
             <div style="height: calc(50vh - 81px); border:1px solid black; padding:3px;" id="cell2">
-                <v-tabs style="zoom:0.8;">
+                <v-tabs style="zoom:0.8;" grow>
                     <v-tab>Props</v-tab>
-                    <v-tab>Slots</v-tab>
+                    <v-tab>Ev / Slots</v-tab>
                     <v-tab>Data</v-tab>
-                    <v-tab>CSS</v-tab>
+                    <v-tab>Style</v-tab>
 
                     <v-tab-item
                         style=" overflow-y:auto; overflow-x: hidden; padding:10px;"
@@ -352,37 +345,57 @@
                         style="overflow-y:auto; overflow-x: hidden; padding:10px;"
                         class="cell3"
                     >
-                        <ul v-if="docs">
-                            <li v-for="slot in docs.slots" :key="slot.name">
-                                <b>{{slot.name}}</b>
-                                :
-                                {{slot.description}}
-                                <ul>
-                                    <li v-for="prop in slot['vue-properties']" :key="prop.name">
-                                        <b>{{prop.name}}</b>
-                                        :
-                                        {{prop.type}} {{prop.description}}
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <br />
-                        <hr />
-                        <br />
-                        <ul v-if="docs">
-                            <li v-for="event in docs.events" :key="event.name">
-                                <b>{{event.name}}</b>
-                                :
-                                {{event.description}}
-                                <ul>
-                                    <li v-for="arg in event.arguments" :key="arg.name">
-                                        <b>{{arg.name}}</b>
-                                        :
-                                        {{arg.type}} {{arg.description}}
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <v-row v-if="selected && docs" class="MyBolder">
+                            <v-col cols="12" v-for="event in docs.events" :key="event.name">
+                                <v-text-field
+                                    :prefix="`${event.name}: `"
+                                    v-model="selected.on[event.name]"
+                                    hide-details="auto"
+                                ></v-text-field>
+                                <span class="text-caption">
+                                    {{event.description}}
+                                    <ul>
+                                        <li v-for="arg in event.arguments" :key="arg.name">
+                                            <b>{{arg.name}}</b>
+                                            :
+                                            {{arg.type}} {{arg.description}}
+                                        </li>
+                                    </ul>
+                                </span>
+                            </v-col>
+                        </v-row>
+
+                        <v-row v-if="selected && parentSlotDocs" class="MyBolder">
+                            <v-col cols="12" v-for="slot in parentSlotDocs" :key="slot.name">
+                                <v-checkbox
+                                    v-if="slot['vue-properties']"
+                                    :value="slot.name"
+                                    v-model="selected.slot1"
+                                    @change="$set(selected,'slot2',undefined)"
+                                    :label="slot.name"
+                                    hide-details="auto"
+                                ></v-checkbox>
+
+                                <v-checkbox
+                                    v-else
+                                    :value="slot.name"
+                                    v-model="selected.slot2"
+                                    @change="$set(selected,'slot1',undefined)"
+                                    :label="slot.name"
+                                    hide-details="auto"
+                                ></v-checkbox>
+                                <div class="text-caption">
+                                    {{slot.description}}
+                                    <ul>
+                                        <li v-for="prop in slot['vue-properties']" :key="prop.name">
+                                            <b>{{prop.name}}</b>
+                                            :
+                                            {{prop.type}} {{prop.description}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </v-col>
+                        </v-row>
                     </v-tab-item>
 
                     <v-tab-item
@@ -391,26 +404,26 @@
                     >
                         <v-row v-if="selected && selected.bind">
                             <v-col cols="6">
-                                <v-text-field label="value" v-model="selected.bind.value"></v-text-field>
-                            </v-col>
-                            <v-col cols="6">
-                                <v-text-field label="items" v-model="selected.bind.items"></v-text-field>
-                            </v-col>
-
-                            <v-col cols="6">
-                                <v-text-field label="slot" v-model="selected.slot"></v-text-field>
-                            </v-col>
-
-                            <v-col cols="6">
-                                <v-text-field label="for" v-model="selected.for"></v-text-field>
-                            </v-col>
-
-                            <v-col cols="6">
                                 <v-text-field label="if" v-model="selected.if"></v-text-field>
                             </v-col>
 
                             <v-col cols="6">
                                 <v-text-field label="model" v-model="selected.model"></v-text-field>
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="text" v-model="selected.bind.text"></v-text-field>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-text-field label="html" v-model="selected.bind.html"></v-text-field>
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="for return val " v-model="selected.for"></v-text-field>
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="for expression" v-model="selected.for"></v-text-field>
                             </v-col>
                         </v-row>
                         {{values}}
@@ -527,6 +540,24 @@ export default {
     computed: {
         variables() {
             return Object.keys(this.values);
+        },
+        parentSlotDocs() {
+            if (
+                this.selected?.type != "slot" &&
+                this.selected?.type != "template"
+            )
+                return [];
+
+            let camelCased = this.parentOfSelected?.type?.replace(
+                /-([a-z])/g,
+                function (g) {
+                    return g[1].toUpperCase();
+                }
+            );
+            camelCased =
+                camelCased.charAt(0).toUpperCase() + camelCased.substring(1);
+
+            return tags[camelCased]?.slots;
         },
     },
     methods: {
@@ -760,7 +791,9 @@ export default {
             if (data instanceof Object) {
                 this.values = data;
             } else {
-                this.values = JSON.parse(`{"rows":"6","color":{"alpha":0.7476638366128797,"hex":"#0D45EB","hexa":"#0D45EBBF","hsla":{"h":225.04209714515187,"s":0.8915509990850499,"l":0.4863733520507813,"a":0.7476638366128797},"hsva":{"h":225.04209714515187,"s":0.9426666259765625,"v":0.92,"a":0.7476638366128797},"hue":225.04209714515187,"rgba":{"r":13,"g":69,"b":235,"a":0.7476638366128797}},"title":"My Card","save":"Save Me"}`);
+                this.values = JSON.parse(
+                    `{"rows":"6","color":{"alpha":0.7476638366128797,"hex":"#0D45EB","hexa":"#0D45EBBF","hsla":{"h":225.04209714515187,"s":0.8915509990850499,"l":0.4863733520507813,"a":0.7476638366128797},"hsva":{"h":225.04209714515187,"s":0.9426666259765625,"v":0.92,"a":0.7476638366128797},"hue":225.04209714515187,"rgba":{"r":13,"g":69,"b":235,"a":0.7476638366128797}},"title":"My Card","save":"Save Me"}`
+                );
                 console.log(this.values);
             }
         } catch (e) {
