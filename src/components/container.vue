@@ -21,12 +21,12 @@
                 v-for="(child, ck) in slot.children"
                 :key="`${id||'0'}.${sk}.${ck}`"
                 :id="`${id||'0'}.${sk}.${ck}`"
-                :inSlot="slotObj"
+                :inSlot="{name:slot.slot, value:slotObj}"
                 :element="child"
                 :selected="localSelected"
                 @setSelected="setSelected(child,$event)"
                 :values="values"
-                :forVals="forVals"
+                :localVals="thisLocalVals"
             />
         </template>
         <template v-for="(slot,sk) in slots2" v-slot:[slot.slot2]>
@@ -39,21 +39,21 @@
                 :selected="localSelected"
                 @setSelected="setSelected(child,$event)"
                 :values="values"
-                :forVals="forVals"
+                :localVals="thisLocalVals"
             />
         </template>
 
         <template v-for="(child, ck) in nonslots">
-            <template v-if="child.for">
+            <template v-if="child.for && (child.forVal || child.forKey)">
                 <elementContainer
-                    v-for="(f, fk) in forVal(child)"
+                    v-for="(f, fk) in forExpr(child)"
                     :key="`${id||'0'}.${ck}.${fk}`"
                     :id="`${id||'0'}.${ck}.${fk}`"
                     :element="child"
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
                     :values="values"
-                    :forVals="localForVals(child,f,fk,ck)"
+                    :localVals="getLocalVals(child,f,fk)"
                 />
             </template>
             <template v-else>
@@ -64,7 +64,7 @@
                     :selected="localSelected"
                     @setSelected="setSelected(child,$event)"
                     :values="values"
-                    :forVals="forVals"
+                    :localVals="thisLocalVals"
                 />
             </template>
         </template>
@@ -75,7 +75,7 @@
 export default {
     name: "elementContainer",
     //inheritAttrs:false,
-    props: ["element", "selected", "id", "inSlot", "values", "forVals"],
+    props: ["element", "selected", "id", "inSlot", "values", "localVals"],
     data() {
         return {
             localSelected: false,
@@ -91,6 +91,15 @@ export default {
         },
     },
     computed: {
+        thisLocalVals() {
+            let vals = this.localVals
+                ? JSON.parse(JSON.stringify(this.localVals))
+                : {};
+            if (this.inSlot instanceof Object) {
+                vals[this.inSlot.name] = this.inSlot.value;
+            }
+            return vals;
+        },
         vbind() {
             let obj = {};
             Object.keys(this.element.bind).forEach((k) => {
@@ -101,46 +110,24 @@ export default {
                         m = m.replaceAll("{", "").replaceAll("}", "");
                         return this.expr(m);
                     });
-                    // } else if (String(v).indexOf("$") >= 0) {
-                    //     obj[k] = String(v).replaceAll(/\$[\w.]+/g, (m) => {
-                    //         m = String(m).substring(1);
-
-                    //         let ids = [m];
-                    //         let res = null;
-
-                    //         if (String(m).indexOf(".")) {
-                    //             ids = String(m).split(".");
-                    //         }
-
-                    //         if (
-                    //             this.forVals instanceof Object &&
-                    //             this.forVals[ids[0]] !== undefined
-                    //         ) {
-                    //             res = this.forVals[ids[0]];
-                    //         } else {
-                    //             res = this.values[ids[0]];
-                    //         }
-
-                    //         if (ids.length > 1) {
-                    //             for (let i = 1; i < ids.length; i++) {
-                    //                 if (res instanceof Object) res = res[ids[i]];
-                    //             }
-                    //         }
-
-                    //         return res;
-                    //     });
                 } else {
                     obj[k] = v;
                 }
             });
-            return { ...this.inSlot?.attrs, ...obj };
+            return { ...this.inSlot?.value?.attrs, ...obj };
         },
         von() {
             let obj = {};
             Object.keys(this.element.on).forEach((k) => {
-                obj[k] = ($event) => this.expr(this.element.on[k], $event);
+                obj[k] = ($event) =>
+                    this.onexpr(this.element.on[k]).call(
+                        this.values,
+                        this.localVals || {},
+                        this.inSlot?.value || {},
+                        $event
+                    );
             });
-            return { ...this.inSlot?.on, ...obj };
+            return { ...this.inSlot?.value?.on, ...obj };
         },
         ifval() {
             if (!this.element.if) return true;
@@ -153,10 +140,10 @@ export default {
         inputValue() {
             if (this.element?.model) {
                 if (
-                    this.forVals instanceof Object &&
-                    this.forVals[this.element.model] !== undefined
+                    this.localVals instanceof Object &&
+                    this.localVals[this.element.model] !== undefined
                 )
-                    return this.forVals[this.element.model];
+                    return this.localVals[this.element.model];
                 else return this.values[this.element.model];
             }
             return this.vbind?.inputValue;
@@ -164,10 +151,10 @@ export default {
         val() {
             if (this.element?.model) {
                 if (
-                    this.forVals instanceof Object &&
-                    this.forVals[this.element.model] !== undefined
+                    this.localVals instanceof Object &&
+                    this.localVals[this.element.model] !== undefined
                 )
-                    return this.forVals[this.element.model];
+                    return this.localVals[this.element.model];
                 else return this.values[this.element.model];
             }
             return this.vbind?.value;
@@ -206,63 +193,53 @@ export default {
         },
     },
     methods: {
-        expr(val, event) {
-            let vars1 = Object.keys(this.values || {});
-            let vars2 = Object.keys(this.forVals || {});
-
+        expr(val) {
+            let vars = Object.keys(this.localVals || {});
+            let s = "";
+            if (this.inSlot?.name) s = `const ${this.inSlot.name} = _obj2;`;
             try {
                 return Function(
-                    "obj1",
-                    "obj2",
-                    "$event",
-                    `const {${vars1}} = obj1; const {${vars2}} = obj2; return (${val})`
-                ).call(this, this.values || {}, this.forVals || {}, event);
+                    "_obj1",
+                    "_obj2",
+                    `const {${vars}} = _obj1; ${s} return (${val})`
+                ).call(
+                    this.values,
+                    this.localVals || {},
+                    this.inSlot?.value || {}
+                );
             } catch (e) {
                 //console.log(e);
             }
         },
-        json(val) {
-            if (typeof val == "string" && val.indexOf('"') >= 0) {
-                return JSON.parse(val);
-            }
-            return val;
-        },
-        forVal(child) {
-            let f = this.json(child.for);
-
-            if (f instanceof Object) {
-                if (f.value) return f.value;
-                if (f.model) {
-                    if (
-                        this.forVals instanceof Object &&
-                        this.forVals[this.element.model] !== undefined
-                    ) {
-                        if (this.forVals[this.element.model] - 0 > 0)
-                            return this.forVals[this.element.model] - 0;
-                        return this.forVals[this.element.model];
-                    }
-                    if (this.values[f.model] - 0 > 0)
-                        return this.values[f.model] - 0;
-                    return this.values[f.model];
-                }
-            } else {
-                if (f - 0 > 0) return f - 0;
-                return f;
+        onexpr(val) {
+            let vars = Object.keys(this.localVals || {});
+            let s = "";
+            if (this.inSlot?.name) s = `const ${this.inSlot.name} = _obj2;`;
+            try {
+                return Function(
+                    "_obj1",
+                    "_obj2",
+                    "$event",
+                    `const {${vars}} = _obj1; ${s} ${val}`
+                );
+            } catch (e) {
+                //console.log(e);
             }
         },
-        localForVals(child, fVal, fKey, pk) {
-            let key = `for.${this.id || "0"}.${pk}`;
 
-            let f = this.json(child.for);
+        forExpr(child) {
+            return this.expr(child.for) || [];
+        },
 
-            if (f instanceof Object && f.key) {
-                key = f.key;
-            }
+        getLocalVals(child, fVal, fKey) {
+            let vals = this.thisLocalVals
+                ? JSON.parse(JSON.stringify(this.thisLocalVals))
+                : {};
 
-            let val = {};
-            val[key] = fVal;
+            if (child.forVal) vals[child.forVal] = fVal;
+            if (child.forKey) vals[child.forKey] = fKey;
 
-            return { ...this.forVals, ...val };
+            return vals;
         },
         input(val) {
             if (this.element?.model)

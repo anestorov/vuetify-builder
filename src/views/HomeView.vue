@@ -260,9 +260,10 @@
                 </v-row>
             </div>
             <div style="height: calc(50vh - 81px); border:1px solid black; padding:3px;" id="cell2">
-                <v-tabs style="zoom:0.8;" grow>
+                <v-tabs style="zoom:0.8;" grow v-if="selected">
                     <v-tab>Props</v-tab>
-                    <v-tab>Ev / Slots</v-tab>
+                    <v-tab v-if="selected.type=='template' || selected.type=='slot'">Slots</v-tab>
+                    <v-tab v-else>Events</v-tab>
                     <v-tab>Data</v-tab>
                     <v-tab>Style</v-tab>
 
@@ -367,14 +368,26 @@
 
                         <v-row v-if="selected && parentSlotDocs" class="MyBolder">
                             <v-col cols="12" v-for="slot in parentSlotDocs" :key="slot.name">
-                                <v-checkbox
-                                    v-if="slot['vue-properties']"
-                                    :value="slot.name"
-                                    v-model="selected.slot1"
-                                    @change="$set(selected,'slot2',undefined)"
-                                    :label="slot.name"
-                                    hide-details="auto"
-                                ></v-checkbox>
+                                <v-row dense v-if="slot['vue-properties']">
+                                    <v-col cols="auto">
+                                        <v-checkbox
+                                            :value="slot.name"
+                                            v-model="selected.slot1"
+                                            @change="$set(selected,'slot2',undefined)"
+                                            :label="slot.name"
+                                            hide-details="auto"
+                                            class="mb-1"
+                                        ></v-checkbox>
+                                    </v-col>
+                                    <v-col>
+                                        <v-text-field
+                                            v-if="selected.slot1==slot.name"
+                                            v-model="selected.slot"
+                                            hide-details="auto"
+                                            label="Slot object name"
+                                        ></v-text-field>
+                                    </v-col>
+                                </v-row>
 
                                 <v-checkbox
                                     v-else
@@ -384,6 +397,7 @@
                                     :label="slot.name"
                                     hide-details="auto"
                                 ></v-checkbox>
+
                                 <div class="text-caption">
                                     {{slot.description}}
                                     <ul>
@@ -411,22 +425,28 @@
                                 <v-text-field label="model" v-model="selected.model"></v-text-field>
                             </v-col>
 
+                            <v-col cols="12">
+                                <v-text-field label="value" v-model="selected.bind.value"></v-text-field>
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-text-field label="For expression" v-model="selected.for"></v-text-field>
+                            </v-col>
+                            <v-col cols="3">
+                                <v-text-field label="var name" v-model="selected.forVal"></v-text-field>
+                            </v-col>
+                            <v-col cols="3">
+                                <v-text-field label="key name" v-model="selected.forKey"></v-text-field>
+                            </v-col>
+
                             <v-col cols="6">
                                 <v-text-field label="text" v-model="selected.bind.text"></v-text-field>
                             </v-col>
                             <v-col cols="6">
                                 <v-text-field label="html" v-model="selected.bind.html"></v-text-field>
                             </v-col>
-
-                            <v-col cols="6">
-                                <v-text-field label="for return val " v-model="selected.for"></v-text-field>
-                            </v-col>
-
-                            <v-col cols="6">
-                                <v-text-field label="for expression" v-model="selected.for"></v-text-field>
-                            </v-col>
                         </v-row>
-                        {{values}}
+                        {{variables}}
                     </v-tab-item>
 
                     <v-tab-item
@@ -509,13 +529,13 @@ export default {
     watch: {
         elements: {
             handler(n) {
-                window.localStorage.setItem("VueBuild2", JSON.stringify(n));
+                window.localStorage.setItem("VueBuild3", JSON.stringify(n));
             },
             deep: true,
         },
         values: {
             handler(n) {
-                window.localStorage.setItem("VueBuildData2", JSON.stringify(n));
+                window.localStorage.setItem("VueBuildData3", JSON.stringify(n));
             },
             deep: true,
         },
@@ -774,15 +794,15 @@ export default {
         }).observe(document.querySelector("#cell1"));
 
         try {
-            let structure = window.localStorage.getItem("VueBuild2");
-            let data = window.localStorage.getItem("VueBuildData2");
+            let structure = window.localStorage.getItem("VueBuild3");
+            let data = window.localStorage.getItem("VueBuildData3");
 
             if (structure) structure = JSON.parse(structure);
             if (structure instanceof Object && structure.type) {
                 this.elements = structure;
             } else {
                 this.elements = JSON.parse(
-                    `{"id":"0","type":"v-container","bind":{},"on":{},"children":[{"type":"v-card","children":[{"type":"v-toolbar","children":[{"type":"span","content":"Label","children":[],"bind":{},"on":{},"model":"title"},{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-close","children":[],"bind":{},"on":{}}],"bind":{"icon":true},"on":{}}],"bind":{"height":"30","color":"{{ color.hexa }}","dark":true},"on":{},"grouped":false},{"type":"v-card-text","children":[{"type":"v-row","children":[{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Number of Lines","hide-details":false,"type":"number"},"on":{},"model":"rows"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Card Title","hide-details":false},"on":{},"model":"title"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"{{title}} Buttot"},"on":{},"model":"save"}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"span","content":"List Items ","children":[],"bind":{"class":"text-h6"},"on":{}},{"type":"v-row","children":[{"type":"v-col","content":null,"children":[{"type":"ul","children":[{"type":"li","children":[],"bind":{"cols":"12","class":"{{ 'mx-' + forV }} my-2","value":"{{forV}}th Element"},"on":{},"for":"{\\"key\\":\\"forV\\",\\"model\\":\\"rows\\"}","model":""}],"bind":{},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-color-picker","content":null,"children":[],"bind":{"hide-inputs":true,"mode":"rgba"},"on":{},"model":"color"}],"bind":{"cols":"auto"},"on":{}}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"v-card-actions","children":[{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","content":null,"children":[{"type":"v-icon","content":"mdi-content-save","children":[],"bind":{"left":true},"on":{}},{"type":"span","content":"Save","children":[],"bind":{},"on":{},"model":"save"}],"bind":{"title":"opsss","color":"success"},"on":{},"grouped":false}],"bind":{},"on":{},"grouped":false}],"bind":{},"on":{}}]}`
+                    `{"id":"0","type":"v-container","bind":{},"on":{},"children":[{"type":"v-card","children":[{"type":"v-toolbar","children":[{"type":"span","content":"Label","children":[],"bind":{},"on":{},"model":"title"},{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","children":[{"type":"v-icon","content":"mdi-close","children":[],"bind":{},"on":{}}],"bind":{"icon":true},"on":{}}],"bind":{"height":"30","color":"{{this.color.hexa}}","dark":true},"on":{},"grouped":false},{"type":"v-card-text","children":[{"type":"v-row","children":[{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Number of Lines","hide-details":false,"type":"number"},"on":{},"model":"rows"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","content":null,"children":[],"bind":{"label":"Card Title","hide-details":false},"on":{},"model":"title"}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-text-field","children":[{"type":"slot","children":[{"type":"span","children":[],"bind":{"value":"{{counter.props.value}} Letters","class":"text-caption"},"on":{}}],"bind":{"value":""},"on":{},"slot1":"counter","slot":"counter"}],"bind":{"counter":true,"label":"{{this.title}} Save Btn"},"on":{},"model":"save","slot":null}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"span","content":"List Items ","children":[],"bind":{"class":"text-h6"},"on":{}},{"type":"v-row","children":[{"type":"v-col","content":null,"children":[{"type":"ul","children":[{"type":"li","children":[{"type":"div","content":null,"children":[],"bind":{"value":"{{forVal}} th Element"},"on":{}}],"bind":{"cols":"12","class":"{{ 'ml-' + forKey }} my-2","value":""},"on":{},"for":"this.rows-0","model":"","forVar":"forVal","forKey":"forKey","forVal":"forVal"}],"bind":{},"on":{}}],"bind":{},"on":{}},{"type":"v-col","children":[{"type":"v-color-picker","content":null,"children":[],"bind":{"hide-inputs":true,"mode":"rgba"},"on":{},"model":"color"}],"bind":{"cols":"auto"},"on":{}}],"bind":{},"on":{}}],"bind":{},"on":{},"grouped":false},{"type":"v-card-actions","children":[{"type":"v-spacer","content":null,"children":[],"bind":{},"on":{}},{"type":"v-btn","content":null,"children":[{"type":"v-icon","content":"mdi-content-save","children":[],"bind":{"left":true},"on":{},"if":""},{"type":"span","content":"Save","children":[],"bind":{"text":""},"on":{},"model":"save"}],"bind":{"title":"opsss","color":"success"},"on":{"click":"if(confirm('Do you want to zero list items?')) this.rows=0;"},"grouped":false,"if":""}],"bind":{},"on":{},"grouped":false}],"bind":{},"on":{},"if":""},{"type":"div","content":"","children":[],"bind":{"text":"","html":""},"on":{}}]}`
                 );
                 console.log(this.elements);
             }
@@ -792,7 +812,7 @@ export default {
                 this.values = data;
             } else {
                 this.values = JSON.parse(
-                    `{"rows":"6","color":{"alpha":0.7476638366128797,"hex":"#0D45EB","hexa":"#0D45EBBF","hsla":{"h":225.04209714515187,"s":0.8915509990850499,"l":0.4863733520507813,"a":0.7476638366128797},"hsva":{"h":225.04209714515187,"s":0.9426666259765625,"v":0.92,"a":0.7476638366128797},"hue":225.04209714515187,"rgba":{"r":13,"g":69,"b":235,"a":0.7476638366128797}},"title":"My Card","save":"Save Me"}`
+                    `{"rows":"5","color":{"alpha":0.6915890702577395,"hex":"#1243D6","hexa":"#1243D6B0","hsla":{"h":225.04209714515187,"s":0.8450183809280535,"l":0.4552800170898437,"a":0.6915890702577395},"hsva":{"h":225.04209714515187,"s":0.9159999593098959,"v":0.84,"a":0.6915890702577395},"hue":225.04209714515187,"rgba":{"r":18,"g":67,"b":214,"a":0.6915890702577395}},"title":"My Card","save":"Save Me"}`
                 );
                 console.log(this.values);
             }
